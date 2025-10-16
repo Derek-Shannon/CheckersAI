@@ -10,7 +10,6 @@ from assets.scenes.MainMenuScene import MainMenuScene
 class GameStateManager:
     def __init__(self, initial_scene):
         self.current_scene = initial_scene
-
     def set_scene(self, new_scene):
         self.current_scene = new_scene
 
