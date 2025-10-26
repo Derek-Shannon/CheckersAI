@@ -2,10 +2,14 @@ import pygame
 from .Scene import Scene
 
 class GameOverScene(Scene):
+    def __init__(self, screen, winner_message="No winner"):
+        super().__init__(screen)
+        self.winner_message = winner_message
+        self.font = pygame.font.Font(None, 74)
     def draw(self):
-        self.screen.fill((255, 0, 0)) # Red background
+        self.screen.fill((128, 128, 192))
         font = pygame.font.Font(None, 74)
-        text = font.render("Game Over, The winner is: ", True, (0, 0, 0))
+        text = self.font.render(self.winner_message, True, (0, 0, 0))
         text_rect = text.get_rect(center=self.screen.get_rect().center)
         self.screen.blit(text, text_rect)
         
