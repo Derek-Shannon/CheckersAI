@@ -312,7 +312,25 @@ class GameScene(Scene):
     
     def runAI(self):
         while self.current_turn == "Black":
-            
+            legal_moves = self._get_all_legal_moves('Black')
+
+            if legal_moves:
+                # 2. Select a random move
+                # A move is a tuple: ((piece_r, piece_c), (target_r, target_c), captured_piece)
+                selected_move = random.choice(legal_moves)
+                
+                piece_rc, target_rc, captured_piece = selected_move
+                piece_to_move = self.board[piece_rc[0]][piece_rc[1]]
+                self.selected_piece = piece_rc
+                
+                # --- Step 2: Execute the move ---
+                self.move_piece(piece_rc, target_rc, captured_piece)
+                
+            else:
+                # No legal moves, game over is handled in _check_game_over
+                print("print no moves")
+                self._check_game_over()
+                pass
 
     # --- Event Handling ---
     
@@ -324,6 +342,10 @@ class GameScene(Scene):
 
         if self.game_over:
             return 'game_over'
+        
+        # #stops mouse input for the User
+        # if self.mode != "PvP" and self.current_turn == "Black":
+        #     return None
 
         # 2. Handle game board click
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -365,7 +387,7 @@ class GameScene(Scene):
                              self.status_message = f"{self.current_turn}'s piece at ({r},{c}) has no moves."
             #Check for AI
                 if self.mode == "PvAI" and self.current_turn == "Black":
-                    print("run AI")
+                    self.runAI()
             #if it's AI turn and AI is enabled then do minMax
 
     # --- Drawing Methods ---
