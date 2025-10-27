@@ -283,6 +283,9 @@ class GameScene(Scene):
             winner = 'Black' if self.current_turn == 'Red' else 'Red'
             self.status_message = f"Game Over! {self.current_turn} has no legal moves.\n{winner} wins!"
             self.game_over = True
+    def runAI(self):
+        
+        print("running AI!")
 
     # --- Event Handling ---
     
@@ -333,6 +336,10 @@ class GameScene(Scene):
                             self.status_message = f"{self.current_turn} must jump!"
                         elif not self.valid_moves:
                              self.status_message = f"{self.current_turn}'s piece at ({r},{c}) has no moves."
+            #Check for AI
+                if self.mode == "PvAI" and self.current_turn == "Black":
+                    print("run AI")
+            #if it's AI turn and AI is enabled then do minMax
 
     # --- Drawing Methods ---
     
