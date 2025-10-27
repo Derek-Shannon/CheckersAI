@@ -2,6 +2,8 @@ import pygame
 import sys
 import math, random
 from .Scene import Scene
+from . import SearchAlgorithm
+
 
 # --- Piece Class ---
 class Piece:
@@ -318,15 +320,13 @@ class GameScene(Scene):
     
     def runAI(self):
         while self.current_turn == "Black" and self.game_over == False:
-            legal_moves = self._get_all_legal_moves('Black')
+            legal_moves = self._get_all_legal_movesAI('Black')
 
             if legal_moves:
-                
+                move = SearchAlgorithm.check_best_move(legal_moves)
 
-                
-                # --- Step 2: Execute the move ---
-                self.move_piece(piece_rc, target_rc, captured_piece)
 
+                self.move_piece(move[0],move[1],move[2])
 
 
             else:

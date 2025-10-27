@@ -1,6 +1,5 @@
 import math
 
-
 ''' NOTES!!!!!
 uses cords for pieces
 
@@ -16,25 +15,17 @@ Ok so idea time
 
 
 '''
-
-#returns best move for computer to play
-def move():
-    best_value = -math.inf
-    best_node = None
-    for node in moves:
-        node.value = minimax(node,3,True)
-        if (node.value > best_value):
-            best_value = node.value
-            best_node = node
-    return best_node
-
-def get_children(node):
-    return node.children
+def check_best_move(legal_moves):
+    best_val = -math.inf
+    best_move = None
+    for move in legal_moves:
+        if (move[3] > best_val):
+            best_move = move
+            best_val = move[3]
+    return best_move
 
 
-
-
-#no pruning yet
+'''
 def minimax(node,depth, maximizing_player):
     if depth == 0:
         return node.value
@@ -51,3 +42,4 @@ def minimax(node,depth, maximizing_player):
             value = minimax(child, depth-1, True)
             best_value = min(best_value,value)
         return best_value
+        '''
