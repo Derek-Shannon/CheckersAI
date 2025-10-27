@@ -311,7 +311,7 @@ class GameScene(Scene):
         return all_moves
     
     def runAI(self):
-        while self.current_turn == "Black":
+        while self.current_turn == "Black" and self.game_over == False:
             legal_moves = self._get_all_legal_moves('Black')
 
             if legal_moves:
