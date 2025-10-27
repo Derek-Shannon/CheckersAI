@@ -284,7 +284,7 @@ class GameScene(Scene):
             self.status_message = f"Game Over! {self.current_turn} has no legal moves.\n{winner} wins!"
             self.game_over = True
 
-    def _get_all_legal_moves(self, color):
+    def _get_all_legal_movesAI(self, color):
         """Returns a list of all legal moves (piece, target, captured_piece) for a given color."""
         all_moves = []
         player_pieces = self._get_player_pieces(color)
@@ -295,7 +295,12 @@ class GameScene(Scene):
             jumps = self._check_jump_moves(piece)
             for target_rc, captured_piece in jumps.items():
                 # Store as: (piece_rc, target_rc, captured_piece)
-                all_jumps.append(((piece.row, piece.col), target_rc, captured_piece))
+                if (captured_piece.king):
+                    score = 2
+                else:
+                    score = 1
+
+                all_jumps.append(((piece.row, piece.col), target_rc, captured_piece, score))
 
         if all_jumps:
             # If jumps are available, only return jumps
@@ -306,7 +311,8 @@ class GameScene(Scene):
             simple_moves = self.get_valid_moves(piece)
             for target_rc, captured_piece in simple_moves.items():
                 # captured_piece will be None for simple moves
-                all_moves.append(((piece.row, piece.col), target_rc, captured_piece))
+                score = 0
+                all_moves.append(((piece.row, piece.col), target_rc, captured_piece, score))
                 
         return all_moves
     
@@ -315,17 +321,14 @@ class GameScene(Scene):
             legal_moves = self._get_all_legal_moves('Black')
 
             if legal_moves:
-                # 2. Select a random move
-                # A move is a tuple: ((piece_r, piece_c), (target_r, target_c), captured_piece)
-                selected_move = random.choice(legal_moves)
                 
-                piece_rc, target_rc, captured_piece = selected_move
-                piece_to_move = self.board[piece_rc[0]][piece_rc[1]]
-                self.selected_piece = piece_rc
+
                 
                 # --- Step 2: Execute the move ---
                 self.move_piece(piece_rc, target_rc, captured_piece)
-                
+
+
+
             else:
                 # No legal moves, game over is handled in _check_game_over
                 print("print no moves")
