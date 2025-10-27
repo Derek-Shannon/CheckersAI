@@ -1,6 +1,6 @@
 import pygame
 import sys
-import math
+import math, random
 from .Scene import Scene
 
 # --- Piece Class ---
@@ -283,9 +283,36 @@ class GameScene(Scene):
             winner = 'Black' if self.current_turn == 'Red' else 'Red'
             self.status_message = f"Game Over! {self.current_turn} has no legal moves.\n{winner} wins!"
             self.game_over = True
-    def runAI(self):
+
+    def _get_all_legal_moves(self, color):
+        """Returns a list of all legal moves (piece, target, captured_piece) for a given color."""
+        all_moves = []
+        player_pieces = self._get_player_pieces(color)
         
-        print("running AI!")
+        # Check for mandatory jumps first (standard checkers rule)
+        all_jumps = []
+        for piece in player_pieces:
+            jumps = self._check_jump_moves(piece)
+            for target_rc, captured_piece in jumps.items():
+                # Store as: (piece_rc, target_rc, captured_piece)
+                all_jumps.append(((piece.row, piece.col), target_rc, captured_piece))
+
+        if all_jumps:
+            # If jumps are available, only return jumps
+            return all_jumps
+
+        # If no jumps, check for simple moves
+        for piece in player_pieces:
+            simple_moves = self.get_valid_moves(piece)
+            for target_rc, captured_piece in simple_moves.items():
+                # captured_piece will be None for simple moves
+                all_moves.append(((piece.row, piece.col), target_rc, captured_piece))
+                
+        return all_moves
+    
+    def runAI(self):
+        while self.current_turn == "Black":
+            
 
     # --- Event Handling ---
     
