@@ -17,7 +17,7 @@ Ok so idea time
 
 '''
 
-
+#returns best move for computer to play
 def move():
     best_value = -math.inf
     best_node = None
