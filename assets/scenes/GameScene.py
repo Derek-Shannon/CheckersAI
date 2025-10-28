@@ -204,6 +204,52 @@ class GameScene(Scene):
 
         return moves
 
+
+    #for ai scoring
+    def get_valid_movesAI(self, coords):
+        """Calculates all valid moves (jumps and non-jumps) for a piece."""
+        
+        print("coords", coords)
+        score = 0
+        r, c = coords
+        piece = Piece(r,c,'Black')
+        
+        # 1. Always check for mandatory jump moves first
+        jump_moves = self._check_jump_moves(piece)
+        if jump_moves:
+            score = 1
+            return jump_moves, score #sends back score for ai
+
+        # 2. If no jumps are available, check for simple non-jump moves
+        moves = {}
+        
+        
+        # Directions: (row_step, col_step)
+        directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+        
+        # Non-king pieces can only move forward
+        if not piece.king:
+            if piece.color == 'Red':
+                directions = [d for d in directions if d[0] == -1] # Red moves up
+            else: # Black
+                directions = [d for d in directions if d[0] == 1] # Black moves down
+
+        for dr, dc in directions:
+            target_r, target_c = r + dr, c + dc
+            
+            if self._is_on_board(target_r, target_c):
+                # Landing spot must be empty and on a dark square
+                
+                if self.board[target_r][target_c] is None:
+                    # Non-jump moves don't capture a piece (value is None)
+                    moves[(target_r, target_c)] = None
+                    score = 0
+                else:
+                    score = -2
+        
+        return moves,score
+
+
     def move_piece(self, piece_rc, target_rc, captured_piece=None):
         p_r, p_c = piece_rc
         t_r, t_c = target_rc
@@ -320,13 +366,25 @@ class GameScene(Scene):
     
     def runAI(self):
         while self.current_turn == "Black" and self.game_over == False:
-            legal_moves = self._get_all_legal_movesAI('Black')
-
+            legal_moves = self._get_all_legal_movesAI("Black")
+            best_val = -math.inf
+            
             if legal_moves:
-                move = SearchAlgorithm.check_best_move(legal_moves)
+                best_move = None 
+                for move in legal_moves:
+                
+                    score = move[3]
+                    val = SearchAlgorithm.minimax(self,move[0],2,True, True)
+                    if (val+score > best_val):
+                        best_val = val + score
+                        best_move = move
 
-
-                self.move_piece(move[0],move[1],move[2])
+                if best_move:   
+                    self.move_piece(best_move[0],best_move[1],best_move[2])
+                else:
+                    legal_moves = self._get_all_legal_movesAI("Black")
+                    i = random.choice(legal_moves)
+                    self.move_piece(i[0],i[1],i[2])
 
 
             else:
