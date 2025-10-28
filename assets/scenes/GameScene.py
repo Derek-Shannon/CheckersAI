@@ -178,6 +178,15 @@ class GameScene(Scene):
         jump_moves = self._check_jump_moves(piece)
         if jump_moves:
             return jump_moves
+        
+        #check if a different piece must jump
+        player_pieces = self._get_player_pieces(piece.color)
+        for other_piece in player_pieces:
+            jumps = self._check_jump_moves(other_piece)
+            if jumps != {}:
+                print("no")
+                return {} # a different piece must jump
+        print("checking normal moves...")
 
         # 2. If no jumps are available, check for simple non-jump moves
         moves = {}
