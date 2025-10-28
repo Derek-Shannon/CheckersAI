@@ -1,9 +1,10 @@
 import pygame
 import sys
 import math, random
+
 from .Scene import Scene
 from . import SearchAlgorithm
-
+from ..data.Timer import Timer
 
 # --- Piece Class ---
 class Piece:
@@ -32,6 +33,7 @@ class GameScene(Scene):
     def __init__(self, screen, mode='PvP'):
         super().__init__(screen)
         self.mode = mode
+        self.AITimer = Timer(500) #500ms delay for AI
         print(f"Starting GameScene in {self.mode} mode.")
         try:
             self.board_image = pygame.image.load('assets/images/board.jpg').convert_alpha()
@@ -184,9 +186,7 @@ class GameScene(Scene):
         for other_piece in player_pieces:
             jumps = self._check_jump_moves(other_piece)
             if jumps != {}:
-                print("no")
                 return {} # a different piece must jump
-        print("checking normal moves...")
 
         # 2. If no jumps are available, check for simple non-jump moves
         moves = {}
@@ -456,10 +456,15 @@ class GameScene(Scene):
                         elif not self.valid_moves:
                              self.status_message = f"{self.current_turn}'s piece at ({r},{c}) has no moves."
             #Check for AI
-                if self.mode == "PvAI" and self.current_turn == "Black":
-                    self.runAI()
             #if it's AI turn and AI is enabled then do minMax
-
+    def update(self):
+        if self.mode == "PvAI" and self.current_turn == "Black":
+            if not self.AITimer.running:
+                self.AITimer.start()
+            if self.AITimer.is_finished():
+                self.AITimer.stop()
+                self.runAI()
+        
     # --- Drawing Methods ---
     
     def draw_board(self):
