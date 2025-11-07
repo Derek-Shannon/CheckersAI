@@ -1,6 +1,6 @@
 import pygame
 import sys
-import math, random
+import math, random, copy
 
 from .Scene import Scene
 from . import SearchAlgorithm
@@ -139,8 +139,13 @@ class GameScene(Scene):
 
     # --- Core Checkers Logic ---
     
-    def _check_jump_moves(self, piece, mandatory_only=False):
+    def _check_jump_moves(self, piece, mandatory_only=False, board=None):
         """Calculates all possible jump moves for a given piece."""
+        
+        if board is None:
+            board = self.board
+        
+        
         moves = {}
         r, c = piece.row, piece.col
         
@@ -163,7 +168,7 @@ class GameScene(Scene):
 
             if self._is_on_board(target_r, target_c):
                 # 1. Landing spot must be empty
-                if self.board[target_r][target_c] is None:
+                if board[target_r][target_c] is None:
                     captured_piece = self._get_piece_at(mid_r, mid_c)
                     
                     # 2. Must jump over an opponent piece
@@ -173,9 +178,14 @@ class GameScene(Scene):
                         
         return moves
 
-    def get_valid_moves(self, piece):
+    def get_valid_moves(self, piece, board = None):
         """Calculates all valid moves (jumps and non-jumps) for a piece."""
         
+        if board is None:
+            board = self.board
+
+
+
         # 1. Always check for mandatory jump moves first
         jump_moves = self._check_jump_moves(piece)
         if jump_moves:
@@ -214,7 +224,7 @@ class GameScene(Scene):
         return moves
 
 
-    #for ai scoring
+    '''#for ai scoring
     def get_valid_movesAI(self, coords):
         """Calculates all valid moves (jumps and non-jumps) for a piece."""
         
@@ -256,7 +266,7 @@ class GameScene(Scene):
                 else:
                     score = -2
         
-        return moves,score
+        return moves,score '''
 
 
     def move_piece(self, piece_rc, target_rc, captured_piece=None):
@@ -305,12 +315,17 @@ class GameScene(Scene):
         self.status_message = f"It's {self.current_turn}'s turn."
         self._check_game_over()
 
-    def _get_player_pieces(self, color):
+    def _get_player_pieces(self, color, board = None):
         """Returns a list of all pieces belonging to a color."""
+
+        if board is None:
+            board = self.board
+
+
         pieces = []
         for r in range(8):
             for c in range(8):
-                piece = self.board[r][c]
+                piece = board[r][c]
                 if piece and piece.color == color:
                     pieces.append(piece)
         return pieces
@@ -341,15 +356,20 @@ class GameScene(Scene):
             self.status_message = f"Game Over! {self.current_turn} has no legal moves.\n{winner} wins!"
             self.game_over = True
 
-    def _get_all_legal_movesAI(self, color):
+    def _get_all_legal_movesAI(self, color, board = None):
+
+        if board is None:
+            board = self.board
+
+
         """Returns a list of all legal moves (piece, target, captured_piece) for a given color."""
         all_moves = []
-        player_pieces = self._get_player_pieces(color)
+        player_pieces = self._get_player_pieces(color, board)
         
         # Check for mandatory jumps first (standard checkers rule)
         all_jumps = []
         for piece in player_pieces:
-            jumps = self._check_jump_moves(piece)
+            jumps = self._check_jump_moves(piece, board)
             for target_rc, captured_piece in jumps.items():
                 # Store as: (piece_rc, target_rc, captured_piece)
                 if (captured_piece.king):
@@ -365,7 +385,7 @@ class GameScene(Scene):
 
         # If no jumps, check for simple moves
         for piece in player_pieces:
-            simple_moves = self.get_valid_moves(piece)
+            simple_moves = self.get_valid_moves(piece,board)
             for target_rc, captured_piece in simple_moves.items():
                 # captured_piece will be None for simple moves
                 score = 0
@@ -373,12 +393,165 @@ class GameScene(Scene):
                 
         return all_moves
     
-    def runAI(self):
-        while self.current_turn == "Black" and self.game_over == False:
-            legal_moves = self._get_all_legal_movesAI("Black")
-            best_val = -math.inf
+
+
+    def eval_score(self, board=None):
+
+        if board is None:
+            board = self.board
+
+
+        score = 0
+
+        for r in range (8):
+            for c in range(8):
+                piece = board[r][c]
+                if piece:
+                    val = 1
+
+                    if piece.king:
+                        val = 2
+                
+                    if piece.color == 'Black':
+                        score+= val
+                    else:
+                        score -= val
             
-            if legal_moves:
+        return score
+
+    
+
+
+
+    def minmax(self,board,depth,isBlack):
+        
+        
+
+
+        if depth == 0:
+            return self.eval_score(board), None
+
+        color = 'Black' if isBlack else 'Red'
+
+        valid_moves = self._get_all_legal_movesAI(color, board)
+
+
+        if not valid_moves:
+
+            return (-9999, None) if isBlack else (9999, None)
+
+
+
+        best_move = None
+        
+        if (isBlack):
+            max_val = -math.inf
+
+            for move in valid_moves:
+                new_board = copy.deepcopy(board)
+                
+                #new_board.move_piece(move[0],move[1],move[2])
+
+
+                p_r, p_c = move[0]
+                t_r, t_c = move[1]
+                captured_piece = move[2]
+
+                # copy board already created above
+                piece = new_board[p_r][p_c]
+                if not piece:
+                    continue
+
+                new_board[p_r][p_c] = None
+                new_board[t_r][t_c] = piece
+                piece.row, piece.col = t_r, t_c
+
+                if captured_piece:
+                    cr, cc = captured_piece.row, captured_piece.col
+                    new_board[cr][cc] = None
+
+
+
+                val, temp = self.minmax(new_board, depth -1, False)
+
+                if val > max_val:
+                    max_val = val
+                    best_move = move
+
+            return max_val, best_move
+        
+        else:
+            min_val = math.inf
+
+            for move in valid_moves:
+                new_board = copy.deepcopy(board)
+                ##new_board.move_piece(move[0],move[1],move[2])
+
+                p_r, p_c = move[0]
+                t_r, t_c = move[1]
+                captured_piece = move[2]
+
+                # copy board already created above
+                piece = new_board[p_r][p_c]
+                if not piece:
+                    continue
+
+                new_board[p_r][p_c] = None
+                new_board[t_r][t_c] = piece
+                piece.row, piece.col = t_r, t_c
+
+                if captured_piece:
+                    cr, cc = captured_piece.row, captured_piece.col
+                    new_board[cr][cc] = None
+
+                val, temp = self.minmax(new_board, depth -1, True)
+
+                if val < min_val:
+                    min_val = val
+                    best_move = move
+
+            return min_val, best_move
+
+
+        
+
+
+
+
+
+    def runAI(self):
+        if self.current_turn == "Black" and self.game_over == False:
+            
+
+
+            depth = 4 #dpeth for algoritm <----- bigger takes longer + makes AI better (supoosedley)
+            
+            
+            
+            best_val, best_move = self.minmax(self.board, depth, True)
+
+            if best_move:
+                piece_rc, target_rc, captured_piece, who_the_hell_cares = best_move
+                self.move_piece(piece_rc,target_rc, captured_piece)
+
+            else:
+
+                print("uh oh! no valid moves :()")
+                self._check_game_over()
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            '''if legal_moves:
                 best_move = None 
                 for move in legal_moves:
                 
@@ -400,7 +573,7 @@ class GameScene(Scene):
                 # No legal moves, game over is handled in _check_game_over
                 print("print no moves")
                 self._check_game_over()
-                pass
+                pass '''
 
     # --- Event Handling ---
     

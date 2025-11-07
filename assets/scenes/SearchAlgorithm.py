@@ -15,6 +15,15 @@ Ok so idea time
 
 
 '''
+
+
+
+## this stuff is not being used anymore (I htought it would be easier just to ahve the algoritm in game scene) <----------------------------------
+
+
+
+
+
 def check_best_move(game_scene,legal_moves):
     best_val = -math.inf
     best_move = None
