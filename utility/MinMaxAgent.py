@@ -15,6 +15,10 @@ class MinMaxAgent:
         self.color = color # 'Black'
         self.opponent_color = 'Red'
         self.max_depth = max_depth
+        self.isCalculating = False
+
+        self._score = None
+        self._move = None
 
     # --- Utility/Evaluation Methods ---
     
@@ -44,17 +48,16 @@ class MinMaxAgent:
 
         return score
 
-    # --- Minimax Algorithm ---
+    def runAI(self, current_board):
+        """Public method to start the Minimax search."""
+        self._score, self._move = self._minmax(current_board, self.max_depth, True)
     
-    def get_best_move(self, current_board):
+    def get_best_move(self):
         """Public method to start the Minimax search."""
         
-        # Note: The Minimax function is now part of the class and uses the Board methods directly.
-        # We start by maximizing for 'Black'.
-        score, move = self.minmax(current_board, self.max_depth, True)
-        return move
+        return self._score, self._move
 
-    def minmax(self, board, depth, is_maximizing_player):
+    def _minmax(self, board, depth, is_maximizing_player):
         """
         The recursive Minimax function.
         
@@ -123,10 +126,10 @@ class MinMaxAgent:
                 if must_multijump:
                     # Turn is NOT over. Recurse for SAME player, SAME depth.
                     # This handles the mandatory multi-jump sequence.
-                    current_val, _ = self.minmax(new_board, depth, is_maximizing_player)
+                    current_val, _ = self._minmax(new_board, depth, is_maximizing_player)
                 else:
                     # Turn is over. Switch player, decrease depth.
-                    current_val, _ = self.minmax(new_board, depth - 1, False) # Next turn is Minimizing (Red)
+                    current_val, _ = self._minmax(new_board, depth - 1, False) # Next turn is Minimizing (Red)
 
                 # 3. Update best value
                 if current_val > max_val:
@@ -160,10 +163,10 @@ class MinMaxAgent:
                 # 2. Recurse based on multi-jump status
                 if must_multijump:
                     # Turn is NOT over. Recurse for SAME player, SAME depth.
-                    current_val, _ = self.minmax(new_board, depth, is_maximizing_player)
+                    current_val, _ = self._minmax(new_board, depth, is_maximizing_player)
                 else:
                     # Turn is over. Switch player, decrease depth.
-                    current_val, _ = self.minmax(new_board, depth - 1, True) # Next turn is Maximizing (Black)
+                    current_val, _ = self._minmax(new_board, depth - 1, True) # Next turn is Maximizing (Black)
 
                 # 3. Update best value
                 if current_val < min_val:

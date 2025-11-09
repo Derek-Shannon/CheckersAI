@@ -90,14 +90,14 @@ class GameScene(Scene):
         return center_x, center_y
 
     # --- AI Control (Controller) ---
-    def runAI(self):
+    def finalize_ai_move(self):
         """Executes the MinMax algorithm for the AI (Black) turn."""
         if self.board_manager.current_turn == "Black" and not self.game_over:
             depth = 5 
             # Pass the board's internal state (2D list of Pieces) to the MinMax algorithm
             # The minmax function should return (best_val, (piece_rc, target_rc, captured_piece))
-            best_val, best_move = self.ai_agent.minmax(self.board_manager, depth, True)
-            
+            best_val, best_move = self.ai_agent.get_best_move()
+
             print(f"AI Best Move Value: {best_val}")
             
             if best_move:
@@ -221,9 +221,11 @@ class GameScene(Scene):
         if self.mode == "PvAI" and self.board_manager.current_turn == "Black":
             if not self.AITimer.running:
                 self.AITimer.start()
+            else:
+                self.ai_agent.runAI(self.board_manager)
             if self.AITimer.is_finished():
                 self.AITimer.stop()
-                self.runAI()
+                self.finalize_ai_move()
 
     def draw_board(self):
         """Draws the checkered pattern of the board."""
