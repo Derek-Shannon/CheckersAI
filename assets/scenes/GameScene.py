@@ -131,10 +131,15 @@ class GameScene(Scene):
         """Checks if a position is within the 8x8 board bounds."""
         return 0 <= r < 8 and 0 <= c < 8
 
-    def _get_piece_at(self, r, c):
+    def _get_piece_at(self, r, c, board=None):
+
+        if board is None:
+            board=self.board
+
+
         """Safely retrieves a piece from the board."""
         if self._is_on_board(r, c):
-            return self.board[r][c]
+            return board[r][c]
         return None
 
     # --- Core Checkers Logic ---
@@ -169,7 +174,7 @@ class GameScene(Scene):
             if self._is_on_board(target_r, target_c):
                 # 1. Landing spot must be empty
                 if board[target_r][target_c] is None:
-                    captured_piece = self._get_piece_at(mid_r, mid_c)
+                    captured_piece = self._get_piece_at(mid_r, mid_c, board)
                     
                     # 2. Must jump over an opponent piece
                     if captured_piece and captured_piece.color != piece.color:
@@ -369,7 +374,7 @@ class GameScene(Scene):
         # Check for mandatory jumps first (standard checkers rule)
         all_jumps = []
         for piece in player_pieces:
-            jumps = self._check_jump_moves(piece, board)
+            jumps = self._check_jump_moves(piece, board=board)
             for target_rc, captured_piece in jumps.items():
                 # Store as: (piece_rc, target_rc, captured_piece)
                 if (captured_piece.king):
@@ -410,7 +415,7 @@ class GameScene(Scene):
                     val = 1
 
                     if piece.king:
-                        val = 3
+                        val = 2
                 
                     if piece.color == 'Black':
                         score+= val
@@ -432,14 +437,14 @@ class GameScene(Scene):
             return self.eval_score(board), None
 
         color = 'Black' if isBlack else 'Red'
-
+        
         valid_moves = self._get_all_legal_movesAI(color, board)
 
 
         if not valid_moves:
-
-            return (-9999, None) if isBlack else (9999, None)
-
+            return (self.eval_score(board),None)
+            
+        
 
 
         best_move = None
@@ -448,8 +453,8 @@ class GameScene(Scene):
             max_val = -math.inf
 
             for move in valid_moves:
-                new_board = copy.deepcopy(board)
                 
+                new_board = copy.deepcopy(board)
                 #new_board.move_piece(move[0],move[1],move[2])
 
 
@@ -477,6 +482,7 @@ class GameScene(Scene):
                 if val > max_val:
                     max_val = val
                     best_move = move
+                print("max val"+str(max_val))
 
             return max_val, best_move
         
@@ -510,6 +516,7 @@ class GameScene(Scene):
                     min_val = val
                     best_move = move
 
+                print("min val"+str(min_val))
             return min_val, best_move
 
 
@@ -524,11 +531,13 @@ class GameScene(Scene):
             
 
 
-            depth = 5 #dpeth for algoritm <----- bigger takes longer + makes AI better (supoosedley) DON'T SET TO HIGH
+            depth = 6 #dpeth for algoritm <----- bigger takes longer + makes AI better (supoosedley) DON'T SET TO HIGH
             
             
             
             best_val, best_move = self.minmax(self.board, depth, True)
+
+            print("best val="+str(best_val))
 
             if best_move:
                 piece_rc, target_rc, captured_piece, who_the_hell_cares = best_move
