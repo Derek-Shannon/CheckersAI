@@ -410,7 +410,7 @@ class GameScene(Scene):
                     val = 1
 
                     if piece.king:
-                        val = 2
+                        val = 3
                 
                     if piece.color == 'Black':
                         score+= val
@@ -524,7 +524,7 @@ class GameScene(Scene):
             
 
 
-            depth = 4 #dpeth for algoritm <----- bigger takes longer + makes AI better (supoosedley)
+            depth = 5 #dpeth for algoritm <----- bigger takes longer + makes AI better (supoosedley) DON'T SET TO HIGH
             
             
             
