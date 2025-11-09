@@ -370,13 +370,6 @@ class GameScene(Scene):
         """Returns a list of all legal moves (piece, target, captured_piece) for a given color."""
         all_moves = []
         player_pieces = self._get_player_pieces(color, board)
-        
-
-        
-
-
-
-
 
         # Check for mandatory jumps first (standard checkers rule)
         all_jumps = []
@@ -408,13 +401,9 @@ class GameScene(Scene):
 
 
     def eval_score(self, board=None):
-
         if board is None:
             board = self.board
-
-
         score = 0
-
         for r in range (8):
             for c in range(8):
                 piece = board[r][c]
@@ -440,132 +429,150 @@ class GameScene(Scene):
             
         return score
 
-    
-
-
-
-    def minmax(self,board,depth,isBlack):
-        
-        
-
-
+    def minmax(self, board, depth, isBlack):
+        # Base case: Reached max depth
         if depth == 0:
             return self.eval_score(board), None
 
         color = 'Black' if isBlack else 'Red'
         
+        # Get all *potential first moves* for the current player
+        # _get_all_legal_movesAI correctly prioritizes jumps
         valid_moves = self._get_all_legal_movesAI(color, board)
 
-
+        # Base case: No valid moves for this player (they lose)
         if not valid_moves:
-            return (self.eval_score(board),None)
-            
-        
-
+            # Return the score from the current board state
+            # (which will be bad for the player who can't move)
+            return self.eval_score(board), None
 
         best_move = None
-        
-        if (isBlack):
+
+        if isBlack: # Maximizing Player (Black)
             max_val = -math.inf
-
+            
+            # Iterate through all possible *first* moves
             for move in valid_moves:
-                
-                new_board = copy.deepcopy(board)
-                #new_board.move_piece(move[0],move[1],move[2])
-
-
+                # move format: ((piece_r, piece_c), (target_r, target_c), captured_piece_obj, score)
                 p_r, p_c = move[0]
                 t_r, t_c = move[1]
-                captured_piece = move[2]
+                captured_piece = move[2] # This is the piece object from the *original* board
 
-                # copy board already created above
+                # Simulate the move on a deep copy
+                new_board = copy.deepcopy(board)
                 piece = new_board[p_r][p_c]
-                if not piece:
-                    continue
-
+                
+                if not piece: # Safety check
+                    continue 
+                
+                # Perform the move on the new_board
                 new_board[p_r][p_c] = None
                 new_board[t_r][t_c] = piece
                 piece.row, piece.col = t_r, t_c
 
                 if captured_piece:
+                    # Remove the captured piece *from the new_board*
+                    # We use the coordinates from the original captured_piece object
                     cr, cc = captured_piece.row, captured_piece.col
                     new_board[cr][cc] = None
 
-                piece_copy = new_board[t_r][t_c]
+                # --- START MULTI-JUMP FIX ---
+                current_val = 0
                 
-                
-                val, _ = self.minmax(new_board, depth - 1, False)
+                # Check if this move was a jump
+                if captured_piece:
+                    # Check for *more* jumps from the piece's NEW position
+                    piece_that_moved = new_board[t_r][t_c]
+                    more_jumps = self._check_jump_moves(piece_that_moved, board=new_board)
+                    
+                    if more_jumps:
+                        # MULTI-JUMP: Turn is NOT over.
+                        # Recurse for the SAME player (isBlack=True)
+                        # Do NOT decrease depth, as this is all one turn.
+                        # The 'best_move' from this call is irrelevant; we only care about the score.
+                        current_val, _ = self.minmax(new_board, depth, True)
+                    else:
+                        # JUMP ENDS: Turn is over.
+                        # Switch to other player (isBlack=False) and decrease depth.
+                        current_val, _ = self.minmax(new_board, depth - 1, False)
+                else:
+                    # SIMPLE MOVE: Turn is over.
+                    # Switch to other player (isBlack=False) and decrease depth.
+                    current_val, _ = self.minmax(new_board, depth - 1, False)
+                # --- END MULTI-JUMP FIX ---
 
-                
-
-                if val > max_val:
-                    max_val = val
+                if current_val > max_val:
+                    max_val = current_val
                     best_move = move
-                    print("max val"+str(max_val))
+                    # print("max val"+str(max_val)) # Optional: keep for debugging
 
             return max_val, best_move
-        
-        else:
+
+        else: # Minimizing Player (Red)
             min_val = math.inf
-
+            
+            # Iterate through all possible *first* moves
             for move in valid_moves:
-                new_board = copy.deepcopy(board)
-                ##new_board.move_piece(move[0],move[1],move[2])
-
                 p_r, p_c = move[0]
                 t_r, t_c = move[1]
                 captured_piece = move[2]
 
-                # copy board already created above
+                # Simulate the move on a deep copy
+                new_board = copy.deepcopy(board)
                 piece = new_board[p_r][p_c]
-                if not piece:
+
+                if not piece: # Safety check
                     continue
 
+                # Perform the move on the new_board
                 new_board[p_r][p_c] = None
                 new_board[t_r][t_c] = piece
                 piece.row, piece.col = t_r, t_c
 
-                
-
-
                 if captured_piece:
+                    # Remove the captured piece *from the new_board*
                     cr, cc = captured_piece.row, captured_piece.col
                     new_board[cr][cc] = None
-
-
-
-                piece_copy = new_board[t_r][t_c]
                 
-                val, _ = self.minmax(new_board, depth - 1, True)
+                #START MULTI-JUMP
+                current_val = 0
                 
+                # Check if this move was a jump
+                if captured_piece:
+                    # Check for *more* jumps from the piece's NEW position
+                    piece_that_moved = new_board[t_r][t_c]
+                    more_jumps = self._check_jump_moves(piece_that_moved, board=new_board)
+                    
+                    if more_jumps:
+                        # MULTI-JUMP: Turn is NOT over.
+                        # Recurse for the SAME player (isBlack=False)
+                        # Do NOT decrease depth.
+                        # This is the key fix you asked for.
+                        current_val, _ = self.minmax(new_board, depth, False)
+                    else:
+                        # JUMP ENDS: Turn is over.
+                        # Switch to other player (isBlack=True) and decrease depth.
+                        current_val, _ = self.minmax(new_board, depth - 1, True)
+                else:
+                    # SIMPLE MOVE: Turn is over.
+                    # Switch to other player (isBlack=True) and decrease depth.
+                    current_val, _ = self.minmax(new_board, depth - 1, True)
+                # --- END MULTI-JUMP FIX ---
 
-                if val < min_val:
-                    min_val = val
+                if current_val < min_val:
+                    min_val = current_val
                     best_move = move
-
-                    print("min val"+str(min_val))
+                    # print("min val"+str(min_val)) # Optional: keep for debugging
+                    
             return min_val, best_move
-
-
-        
-
-
-
 
 
     def runAI(self):
         if self.current_turn == "Black" and self.game_over == False:
-            
-
 
             depth = 5 #dpeth for algoritm <----- bigger takes longer + makes AI better (supoosedley) DON'T SET TO HIGH
-            
-            
-            
             best_val, best_move = self.minmax(self.board, depth, True)
-
             print("best val="+str(best_val))
-
             if best_move:
                 piece_rc, target_rc, captured_piece, who_the_hell_cares = best_move
                 self.move_piece(piece_rc,target_rc, captured_piece)
@@ -574,42 +581,6 @@ class GameScene(Scene):
 
                 print("uh oh! no valid moves :()")
                 self._check_game_over()
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            '''if legal_moves:
-                best_move = None 
-                for move in legal_moves:
-                
-                    score = move[3]
-                    val = SearchAlgorithm.minimax(self,move[0],2,True, True)
-                    if (val+score > best_val):
-                        best_val = val + score
-                        best_move = move
-
-                if best_move:   
-                    self.move_piece(best_move[0],best_move[1],best_move[2])
-                else:
-                    legal_moves = self._get_all_legal_movesAI("Black")
-                    i = random.choice(legal_moves)
-                    self.move_piece(i[0],i[1],i[2])
-
-
-            else:
-                # No legal moves, game over is handled in _check_game_over
-                print("print no moves")
-                self._check_game_over()
-                pass '''
 
     # --- Event Handling ---
     
@@ -621,10 +592,6 @@ class GameScene(Scene):
 
         if self.game_over:
             return 'game_over'
-        
-        # #stops mouse input for the User
-        # if self.mode != "PvP" and self.current_turn == "Black":
-        #     return None
 
         # 2. Handle game board click
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -680,19 +647,6 @@ class GameScene(Scene):
         """Draws the checkered pattern of the board."""
         board_rect = pygame.Rect(self.OFFSET_X, self.OFFSET_Y, self.SQUARE_SIZE*9, self.SQUARE_SIZE*9)
         self.screen.blit(self.board_image, board_rect.topleft)
-
-        # for r in range(8):
-        #     for c in range(8):
-        #         # Use dark brown for playable squares, light brown for non-playable
-        #         color = self.DARK_BROWN if (r + c) % 2 != 0 else self.LIGHT_BROWN
-                
-        #         rect = pygame.Rect(
-        #             self.OFFSET_X + c * self.SQUARE_SIZE,
-        #             self.OFFSET_Y + r * self.SQUARE_SIZE,
-        #             self.SQUARE_SIZE,
-        #             self.SQUARE_SIZE
-        #         )
-        #         pygame.draw.rect(self.screen, color, rect)
 
     def draw_pieces(self):
         """Draws all pieces currently on the board using images."""
