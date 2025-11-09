@@ -1,10 +1,10 @@
 import pygame
 
-from assets.scenes.Scene import Scene
+from scenes.Scene import Scene
 # --- Scene Classes ---
-from assets.scenes.GameScene import GameScene
-from assets.scenes.GameOverScene import GameOverScene
-from assets.scenes.MainMenuScene import MainMenuScene
+from scenes.GameScene import GameScene
+from scenes.GameOverScene import GameOverScene
+from scenes.MainMenuScene import MainMenuScene
 
 
 class GameStateManager:
