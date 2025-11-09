@@ -371,6 +371,13 @@ class GameScene(Scene):
         all_moves = []
         player_pieces = self._get_player_pieces(color, board)
         
+
+        
+
+
+
+
+
         # Check for mandatory jumps first (standard checkers rule)
         all_jumps = []
         for piece in player_pieces:
@@ -421,6 +428,18 @@ class GameScene(Scene):
                         score+= val
                     else:
                         score -= val
+        for r in range(8):
+            for c in range(8):
+                piece = board[r][c]
+                if piece and piece.color == 'Black':
+                    # check if Red can jump it
+                    threats = self._check_jump_moves(piece, board)
+                    if threats:
+                        score -= 2
+                elif piece and piece.color == 'Red':
+                    threats = self._check_jump_moves(piece, board)
+                    if threats:
+                        score += 2
             
         return score
 
@@ -475,9 +494,13 @@ class GameScene(Scene):
                     cr, cc = captured_piece.row, captured_piece.col
                     new_board[cr][cc] = None
 
+                piece_copy = new_board[t_r][t_c]
+                more_jumps = self._check_jump_moves(piece_copy, board=new_board)
+                
+                
+                val, _ = self.minmax(new_board, depth - 1, False)
 
-
-                val, temp = self.minmax(new_board, depth -1, False)
+                
 
                 if val > max_val:
                     max_val = val
@@ -506,11 +529,20 @@ class GameScene(Scene):
                 new_board[t_r][t_c] = piece
                 piece.row, piece.col = t_r, t_c
 
+                
+
+
                 if captured_piece:
                     cr, cc = captured_piece.row, captured_piece.col
                     new_board[cr][cc] = None
 
-                val, temp = self.minmax(new_board, depth -1, True)
+
+
+                piece_copy = new_board[t_r][t_c]
+                more_jumps = self._check_jump_moves(piece_copy, board=new_board)
+                
+                val, _ = self.minmax(new_board, depth - 1, True)
+                
 
                 if val < min_val:
                     min_val = val
@@ -531,7 +563,7 @@ class GameScene(Scene):
             
 
 
-            depth = 6 #dpeth for algoritm <----- bigger takes longer + makes AI better (supoosedley) DON'T SET TO HIGH
+            depth = 5 #dpeth for algoritm <----- bigger takes longer + makes AI better (supoosedley) DON'T SET TO HIGH
             
             
             
