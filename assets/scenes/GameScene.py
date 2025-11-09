@@ -381,7 +381,7 @@ class GameScene(Scene):
         # Check for mandatory jumps first (standard checkers rule)
         all_jumps = []
         for piece in player_pieces:
-            jumps = self._check_jump_moves(piece, board=board)
+            jumps = self._check_jump_moves(piece, True, board=board)
             for target_rc, captured_piece in jumps.items():
                 # Store as: (piece_rc, target_rc, captured_piece)
                 if (captured_piece.king):
@@ -436,10 +436,7 @@ class GameScene(Scene):
                     threats = self._check_jump_moves(piece, board)
                     if threats:
                         score -= 2
-                elif piece and piece.color == 'Red':
-                    threats = self._check_jump_moves(piece, board)
-                    if threats:
-                        score += 2
+                
             
         return score
 
