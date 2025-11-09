@@ -66,7 +66,7 @@ class GameScene(Scene):
         self.game_over = False
 
         #AI
-        self.ai_agent = MinMaxAgent("Black", 5)
+        self.ai_agent = MinMaxAgent("Black", 7)
 
     # --- Coordinate Conversion (Stays here as it's screen-dependent) ---
     def _get_board_coords(self, pos):

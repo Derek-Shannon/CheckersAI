@@ -233,9 +233,6 @@ class Board:
         
         # 2. If no jumps are available, check for simple non-jump moves
         for piece in player_pieces:
-            # Note: We can reuse the logic from get_valid_moves, 
-            # but since we already confirmed no *jumps* exist anywhere, 
-            # we only need to check for simple moves.
             
             r, c = piece.row, piece.col
             directions = []
