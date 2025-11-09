@@ -495,7 +495,6 @@ class GameScene(Scene):
                     new_board[cr][cc] = None
 
                 piece_copy = new_board[t_r][t_c]
-                more_jumps = self._check_jump_moves(piece_copy, board=new_board)
                 
                 
                 val, _ = self.minmax(new_board, depth - 1, False)
@@ -505,7 +504,7 @@ class GameScene(Scene):
                 if val > max_val:
                     max_val = val
                     best_move = move
-                print("max val"+str(max_val))
+                    print("max val"+str(max_val))
 
             return max_val, best_move
         
@@ -539,7 +538,6 @@ class GameScene(Scene):
 
 
                 piece_copy = new_board[t_r][t_c]
-                more_jumps = self._check_jump_moves(piece_copy, board=new_board)
                 
                 val, _ = self.minmax(new_board, depth - 1, True)
                 
@@ -548,7 +546,7 @@ class GameScene(Scene):
                     min_val = val
                     best_move = move
 
-                print("min val"+str(min_val))
+                    print("min val"+str(min_val))
             return min_val, best_move
 
 
